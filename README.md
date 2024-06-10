@@ -18,12 +18,6 @@ The Taxi App is an Angular-based taxi simulation application. It provides a real
 ![Rides Details](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/e099e564-d25e-4567-8d97-8030207ad9da)
 ![User Interface](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/860f712d-793a-4e16-b792-8e632aa00a06)
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js
-- Angular CLI
 
 ### Installation
 
