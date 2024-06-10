@@ -1,0 +1,54 @@
+@import url('https://fonts.cdnfonts.com/css/Khand');
+
+.feature-card-wrapper {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.feature-card {
+  max-width: 300px;
+  margin-left: 50px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(9, 0, 0, 0.1);
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.6s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.feature-card-container {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.feature-card img {
+  max-width: 40%;
+  max-height: 40%;
+  object-fit: cover;
+  margin-left: 100px;
+  margin-top: 30px;
+}
+
+.text-content {
+  padding: 20px;
+  text-align: center;
+  background-color: #fff;
+  font-family: "Khand", sans-serif;
+}
+
+.text-content h3 {
+  font-size: 24px;
+  margin-bottom: 10px;
+  font-family: "Khand", sans-serif;
+}
+
+.text-content p {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #777;
+  margin: 0;
+  font-family: "Khand", sans-serif;
+}

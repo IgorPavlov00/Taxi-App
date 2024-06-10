@@ -1,0 +1,71 @@
+<button type="button" class="btn btn-primary" style="margin-top: 30px;margin-left: 40px" (click)="backtoHome()">Back home</button>
+
+<section class="py-5">
+  <div class="container-fluid p-lg-0">
+    <div class="row g-0 align-items-center">
+      <div class="col-lg-6">
+        <div class="col-lg-8 mx-auto">
+          <span class="text-muted">Let's Ride</span>
+          <h2 class="display-5 fw-bold">Book Your Ride</h2>
+          <p class="lead">
+            Enter your ride details below to book a taxi.
+          </p>
+          <form (ngSubmit)="bookRide()" #rideForm="ngForm">
+            <div class="row">
+              <div class="col-md-12">
+                <div class="mb-3">
+                  <input class="form-control bg-light" placeholder="Starting Address" type="text" [(ngModel)]="ride.startAddress" name="startAddress" required />
+                </div>
+              </div>
+              <div class="col-md-12">
+                <div class="mb-3">
+                  <input class="form-control bg-light" placeholder="Destination Address" type="text" [(ngModel)]="ride.destinationAddress" name="destinationAddress" required />
+                </div>
+              </div>
+              <div class="col-md-12">
+                <div class="mb-3">
+                  <input class="form-control bg-light" placeholder="Date and Time of Departure" type="datetime-local" [(ngModel)]="ride.dateTime" name="dateTime" required />
+                </div>
+              </div>
+              <div class="col-md-12">
+                <div class="mb-3">
+                  <input class="form-control bg-light" placeholder="Passenger Phone Number" type="tel" [(ngModel)]="ride.passengerPhone" name="passengerPhone" required />
+                </div>
+              </div>
+              <div class="col-md-12">
+                <div class="mb-3">
+                  <select class="form-select bg-light" [(ngModel)]="ride.paymentMethod" name="paymentMethod" required>
+                    <option value="">Select Payment Method</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-12" *ngIf="ride.paymentMethod === 'Card'">
+                <div class="mb-3">
+                  <input class="form-control bg-light" placeholder="Card Number" type="number" [(ngModel)]="ride.cardNumber" name="cardNumber" required />
+                </div>
+                <div class="mb-3">
+                  <input class="form-control bg-light" placeholder="Expiry Date" type="date" [(ngModel)]="ride.cardExpiry" name="cardExpiry" required />
+                </div>
+              </div>
+              <div class="col-md-5">
+                <div class="d-grid">
+                  <button class="btn btn-primary" type="submit" [disabled]="!rideForm.form.valid">Book Ride</button>
+                </div>
+              </div>
+            </div>
+          </form>
+<!--          <div *ngIf="showPrice">-->
+<!--            <h3>Estimated Ride Price: {{ ridePrice }} RSD</h3>-->
+<!--          </div>-->
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="map-container mt-5 mt-lg-0">
+          <div id="map"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
