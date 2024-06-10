@@ -1,27 +1,33 @@
-# Untitled1
+# Taxi App
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.2.8.
+![Taxi App](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/030571e0-df3e-46a5-ab12-9d42ab9a2315)
 
-## Development server
+## Overview
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+The Taxi App is an Angular-based taxi simulation application. It provides a realistic simulation of driving a taxi using the Leaflet map API and offers users a comprehensive rides history page that displays details of each ride.
 
-## Code scaffolding
+![Taxi App Rides History](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/05ab9ec6-3f29-4041-8aef-292eb116ef11)
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## Features
 
-## Build
+- **Realistic Driving Simulation**: Utilizes the Leaflet map API for a dynamic and interactive driving experience.
+- **Rides History**: View your past rides with detailed information about each trip.
+- **User-friendly Interface**: Easy to navigate and use, making the simulation experience enjoyable.
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+![Driving Simulation](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/01853fb2-8324-4a08-9478-477e2d86b8bb)
+![Rides Details](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/e099e564-d25e-4567-8d97-8030207ad9da)
+![User Interface](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/860f712d-793a-4e16-b792-8e632aa00a06)
 
-## Running unit tests
+## Getting Started
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+### Prerequisites
 
-## Running end-to-end tests
+- Node.js
+- Angular CLI
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+### Installation
 
-## Further help
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/IgorPavlov00/Taxi-App.git
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
