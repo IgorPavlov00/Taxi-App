@@ -43,5 +43,5 @@ import { Component, Input } from '@angular/core';
 export class RideDetailsComponent {
   @Input() ride: any;
 
-  constructor() {}
+
 }

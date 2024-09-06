@@ -173,10 +173,10 @@ export class MapComponent implements OnInit {
     const waypoints = this.routingControl.getWaypoints();
 
 
-    var marker = L.marker(this.fromMarker.getLatLng(), {icon: L.icon({iconUrl: 'https://cdn-icons-png.flaticon.com/128/7991/7991029.png', iconSize: [32, 32], iconAnchor: [16, 16]})}).addTo(this.map);
+    const marker = L.marker(this.fromMarker.getLatLng(), {icon: L.icon({iconUrl: 'https://cdn-icons-png.flaticon.com/128/7991/7991029.png', iconSize: [32, 32], iconAnchor: [16, 16]})}).addTo(this.map);
 
-    var fromMarker = this.fromMarker;
-    var toMarker = this.toMarker;
+    const fromMarker = this.fromMarker;
+    const toMarker = this.toMarker;
 
 
     L.Routing.control({
@@ -196,7 +196,7 @@ export class MapComponent implements OnInit {
         ]
       }
     }).on('routesfound', function (e: { routes: { coordinates: any[]; }[]; }) {
-      var routes = e.routes;
+      const routes = e.routes;
       console.log(routes);
 
       e.routes[0].coordinates.forEach(function (coord, index) {

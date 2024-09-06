@@ -6,10 +6,10 @@ import { Injectable } from '@angular/core';
 export class DriveService {
   private readonly drivesKey = 'bookedDrives';
 
-  constructor() {}
+
 
   saveDrive(drive: any): void {
-    let drives = this.getDrives();
+    const drives = this.getDrives();
     drives.push(drive);
     localStorage.setItem(this.drivesKey, JSON.stringify(drives));
   }
