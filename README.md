@@ -4,7 +4,7 @@
 
 ## Overview
 
-Application:https://taxi-application.netlify.app/
+Application : https://taxi-application.netlify.app/
 
 The Taxi App is an Angular-based taxi simulation application. It provides a realistic simulation of driving a taxi using the Leaflet map API and offers users a comprehensive rides history page that displays details of each ride.
 
