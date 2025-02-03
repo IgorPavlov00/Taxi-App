@@ -1,30 +1,60 @@
-# Taxi App
+# 🚕 Taxi Simulation App  
 
-![Taxi App](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/030571e0-df3e-46a5-ab12-9d42ab9a2315)
+[![Angular](https://img.shields.io/badge/Angular-DD0031?style=flat&logo=angular&logoColor=white)](https://angular.io/)
+[![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=flat&logo=leaflet&logoColor=white)](https://leafletjs.com/)
+[![Netlify](https://img.shields.io/badge/Netlify-00C7B7?style=flat&logo=netlify&logoColor=white)](https://www.netlify.com/)
 
-## Overview
+A realistic taxi driving simulator with ride history tracking, built using Angular and Leaflet map API.
 
-Application : https://taxi-application.netlify.app/
+---
 
-The Taxi App is an Angular-based taxi simulation application. It provides a realistic simulation of driving a taxi using the Leaflet map API and offers users a comprehensive rides history page that displays details of each ride.
+## 🌟 Features  
+- **🗺️ Interactive Map**: Leaflet-powered driving simulation with real-world coordinates  
+- **📊 Ride Analytics**: Detailed trip statistics including distance, duration, and earnings  
+- **⏱️ Real-time Tracking**: Live position updates during rides  
+- **📅 Ride History**: Comprehensive log of completed trips  
+- **🚦 Simulation Controls**: Accelerate, brake, and navigate using intuitive UI  
 
+---
 
-![Taxi App Rides History](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/05ab9ec6-3f29-4041-8aef-292eb116ef11)
+## 🚀 Live Demo  
+Experience the application live: [https://taxi-application.netlify.app/](https://taxi-application.netlify.app/)  
 
-## Features
+---
 
-- **Realistic Driving Simulation**: Utilizes the Leaflet map API for a dynamic and interactive driving experience.
-- **Rides History**: View your past rides with detailed information about each trip.
-- **User-friendly Interface**: Easy to navigate and use, making the simulation experience enjoyable.
+## 📸 Screenshots  
+| Main Interface | Ride History |  
+|----------------|--------------|  
+| ![Main Screen](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/030571e0-df3e-46a5-ab12-9d42ab9a2315) | ![History](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/05ab9ec6-3f29-4041-8aef-292eb116ef11) |  
 
-![Driving Simulation](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/01853fb2-8324-4a08-9478-477e2d86b8bb)
-![Rides Details](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/e099e564-d25e-4567-8d97-8030207ad9da)
+| Simulation View | Trip Details |  
+|-----------------|--------------|  
+| ![Simulation](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/01853fb2-8324-4a08-9478-477e2d86b8bb) | ![Details](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/e099e564-d25e-4567-8d97-8030207ad9da) |  
 
+---
 
+## 🛠️ Tech Stack  
+**Frontend**  
+![Angular](https://img.shields.io/badge/Angular-DD0031?style=flat&logo=angular&logoColor=white)  
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)  
 
-### Installation
+**Mapping**  
+![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=flat&logo=leaflet&logoColor=white)  
 
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/IgorPavlov00/Taxi-App.git
+**Deployment**  
+![Netlify](https://img.shields.io/badge/Netlify-00C7B7?style=flat&logo=netlify&logoColor=white)  
 
+---
+
+## 🏁 Getting Started  
+
+### Prerequisites  
+- Node.js 16+  
+- Angular CLI  
+- npm/yarn  
+
+### Installation  
+1. Clone the repository:  
+   ```bash  
+   git clone https://github.com/IgorPavlov00/Taxi-App.git  
+   cd Taxi-App  
