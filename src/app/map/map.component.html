@@ -1,71 +1,141 @@
-<button type="button" class="btn btn-primary" style="margin-top: 30px;margin-left: 40px" (click)="backtoHome()">Back home</button>
+<div class="booking">
+  <aside class="panel" aria-label="Ride booking">
 
-<section class="py-5">
-  <div class="container-fluid p-lg-0">
-    <div class="row g-0 align-items-center">
-      <div class="col-lg-6">
-        <div class="col-lg-8 mx-auto">
-          <span class="text-muted">Let's Ride</span>
-          <h2 class="display-5 fw-bold">Book Your Ride</h2>
-          <p class="lead">
-            Enter your ride details below to book a taxi.
-          </p>
-          <form (ngSubmit)="bookRide()" #rideForm="ngForm">
-            <div class="row">
-              <div class="col-md-12">
-                <div class="mb-3">
-                  <input class="form-control bg-light" placeholder="Starting Address" type="text" [(ngModel)]="ride.startAddress" name="startAddress" required />
-                </div>
-              </div>
-              <div class="col-md-12">
-                <div class="mb-3">
-                  <input class="form-control bg-light" placeholder="Destination Address" type="text" [(ngModel)]="ride.destinationAddress" name="destinationAddress" required />
-                </div>
-              </div>
-              <div class="col-md-12">
-                <div class="mb-3">
-                  <input class="form-control bg-light" placeholder="Date and Time of Departure" type="datetime-local" [(ngModel)]="ride.dateTime" name="dateTime" required />
-                </div>
-              </div>
-              <div class="col-md-12">
-                <div class="mb-3">
-                  <input class="form-control bg-light" placeholder="Passenger Phone Number" type="tel" [(ngModel)]="ride.passengerPhone" name="passengerPhone" required />
-                </div>
-              </div>
-              <div class="col-md-12">
-                <div class="mb-3">
-                  <select class="form-select bg-light" [(ngModel)]="ride.paymentMethod" name="paymentMethod" required>
-                    <option value="">Select Payment Method</option>
-                    <option value="Cash">Cash</option>
-                    <option value="Card">Card</option>
-                  </select>
-                </div>
-              </div>
-              <div class="col-md-12" *ngIf="ride.paymentMethod === 'Card'">
-                <div class="mb-3">
-                  <input class="form-control bg-light" placeholder="Card Number" type="number" [(ngModel)]="ride.cardNumber" name="cardNumber" required />
-                </div>
-                <div class="mb-3">
-                  <input class="form-control bg-light" placeholder="Expiry Date" type="date" [(ngModel)]="ride.cardExpiry" name="cardExpiry" required />
-                </div>
-              </div>
-              <div class="col-md-5">
-                <div class="d-grid">
-                  <button class="btn btn-primary" type="submit" [disabled]="!rideForm.form.valid">Book Ride</button>
-                </div>
-              </div>
-            </div>
-          </form>
-<!--          <div *ngIf="showPrice">-->
-<!--            <h3>Estimated Ride Price: {{ ridePrice }} RSD</h3>-->
-<!--          </div>-->
-        </div>
+    <!-- 1. Choose the route -->
+    <form *ngIf="stage === 'plan'" class="stack" (ngSubmit)="findRoute()">
+      <header>
+        <h1>Where to?</h1>
+        <p class="muted">Search for an address, or tap the map to drop a pin.</p>
+      </header>
+
+      <div class="route-fields">
+        <app-address-input
+          inputId="pickup"
+          label="Pickup"
+          placeholder="Street, place or landmark"
+          tone="pickup"
+          [text]="pickupText"
+          (textChange)="onTextChange('pickup', $event)"
+          (placeSelected)="onPlaceSelected('pickup', $event)"></app-address-input>
+
+        <button type="button" class="swap" aria-label="Swap pickup and destination" title="Swap pickup and destination" (click)="swap()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4v15M8 4 4 8M8 4l4 4M16 20V5M16 20l4-4M16 20l-4-4"/></svg>
+        </button>
+
+        <app-address-input
+          inputId="destination"
+          label="Destination"
+          placeholder="Where are you going?"
+          tone="destination"
+          [text]="destinationText"
+          (textChange)="onTextChange('destination', $event)"
+          (placeSelected)="onPlaceSelected('destination', $event)"></app-address-input>
       </div>
-      <div class="col-lg-6">
-        <div class="map-container mt-5 mt-lg-0">
-          <div id="map"></div>
+
+      <p class="alert" role="alert" *ngIf="error">{{ error }}</p>
+
+      <button class="btn btn-primary btn-lg btn-block" type="submit" [disabled]="locating">
+        {{ locating ? 'Finding your route…' : 'See route and fare' }}
+      </button>
+    </form>
+
+    <!-- 2. Review the fare and confirm -->
+    <form *ngIf="stage === 'quote' && route" class="stack" #details="ngForm" (ngSubmit)="details.valid && !departureIsStale && startRide()">
+      <header class="with-back">
+        <button type="button" class="back" aria-label="Change route" title="Change route" (click)="backToPlan()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+        </button>
+        <h1>Your ride</h1>
+      </header>
+
+      <ol class="trip">
+        <li>{{ pickup?.label }}</li>
+        <li>{{ destination?.label }}</li>
+      </ol>
+
+      <div class="quote">
+        <div>
+          <span class="quote-label">Fare</span>
+          <strong class="quote-fare">{{ fare | number:'1.0-0' }} <small>RSD</small></strong>
         </div>
+        <dl class="quote-stats">
+          <div><dt>Distance</dt><dd>{{ route.distanceKm | number:'1.1-1' }} km</dd></div>
+          <div><dt>Time</dt><dd>{{ formatDuration(route.durationMin) }}</dd></div>
+        </dl>
+        <p class="quote-note">{{ farePerKm }} RSD per km of road</p>
+      </div>
+
+      <label class="field">
+        <span class="field-label">Departure</span>
+        <input class="input" type="datetime-local" name="departure" required [(ngModel)]="departure">
+        <p class="field-error" *ngIf="departureIsStale">Choose a departure time that isn't in the past.</p>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Phone number</span>
+        <input class="input" type="tel" name="phone" autocomplete="tel" placeholder="+381 60 123 4567" required pattern="^\+?[0-9 ()/-]{6,20}$" [(ngModel)]="phone" #phoneModel="ngModel">
+        <p class="field-hint" [class.field-error]="phoneModel.invalid && phoneModel.touched">Include the country code, like +381 60 123 4567.</p>
+      </label>
+
+      <fieldset class="field payment">
+        <legend class="field-label">Payment</legend>
+        <div class="segments">
+          <label><input type="radio" name="payment" value="Cash" [(ngModel)]="payment"><span>Cash</span></label>
+          <label><input type="radio" name="payment" value="Card" [(ngModel)]="payment"><span>Card</span></label>
+        </div>
+        <p class="field-hint">This is a simulation, so you won't be charged or asked for card details.</p>
+      </fieldset>
+
+      <button class="btn btn-primary btn-lg btn-block" type="submit" [disabled]="details.invalid || departureIsStale">
+        Confirm ride · {{ fare | number:'1.0-0' }} RSD
+      </button>
+    </form>
+
+    <!-- 3. On the road -->
+    <div *ngIf="stage === 'driving' && route" class="stack">
+      <header>
+        <span class="live"><span aria-hidden="true"></span>On the way</span>
+        <h1>{{ formatDuration(remainingMin) }} to go</h1>
+        <p class="muted">{{ remainingKm | number:'1.1-1' }} km left, heading to {{ destination?.label }}</p>
+      </header>
+
+      <div class="meter" role="progressbar" aria-label="Ride progress" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progress * 100 | number:'1.0-0'">
+        <span [style.width.%]="progress * 100"></span>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-secondary" (click)="finishRide()">Skip to arrival</button>
+        <button type="button" class="btn btn-ghost" (click)="cancelRide()">Cancel ride</button>
       </div>
     </div>
-  </div>
-</section>
+
+    <!-- 4. Arrived -->
+    <div *ngIf="stage === 'done' && completedRide" class="stack">
+      <header role="status">
+        <span class="success-mark">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4.500 4.500L19 7"/></svg>
+        </span>
+        <h1>You've arrived</h1>
+        <p class="muted">{{ completedRide.destinationAddress }}</p>
+      </header>
+
+      <div class="quote">
+        <div>
+          <span class="quote-label">{{ completedRide.paymentMethod }} fare</span>
+          <strong class="quote-fare">{{ completedRide.price | number:'1.0-0' }} <small>RSD</small></strong>
+        </div>
+        <dl class="quote-stats">
+          <div><dt>Distance</dt><dd>{{ route?.distanceKm | number:'1.1-1' }} km</dd></div>
+          <div><dt>Time</dt><dd>{{ formatDuration(route?.durationMin ?? 0) }}</dd></div>
+        </dl>
+      </div>
+
+      <div class="stack-tight">
+        <button type="button" class="btn btn-primary btn-lg btn-block" (click)="bookAnother()">Book another ride</button>
+        <a class="btn btn-secondary btn-lg btn-block" routerLink="/table">View ride history</a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="map" #mapEl></div>
+</div>

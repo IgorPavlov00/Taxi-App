@@ -1,21 +1,26 @@
-<div class="hero">
-
-  <div class="hero-content">
-    <img src="assets/images/taxiapp3.png" height="500px" style="margin-left:200px " alt="description">
-
-    <div class="text-content">
-      <h1>Ride in Style with Premium Service!</h1>
-      <p>Book, Ride, Relax. It's That Easy!</p>
-
-      <div class="buttons">
-        <button class="white-button" (click)="goToMap()">  Book Now</button>
-        <button class="transparent-button">Learn More</button>
+<section class="hero">
+  <div class="container layout">
+    <div class="copy">
+      <span class="eyebrow">Taxi booking simulator</span>
+      <h1>Book a ride.<br><span class="underlined">Watch it drive.</span></h1>
+      <p class="lead">
+        Search real addresses, see your fare from the actual road distance, and follow your taxi along the route, live on the map.
+      </p>
+      <div class="actions">
+        <a class="btn btn-primary btn-lg" routerLink="/map">
+          Book a ride
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.500" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a class="btn btn-secondary btn-lg" routerLink="/" fragment="how">How it works</a>
       </div>
+      <ul class="facts">
+        <li>No sign-up</li>
+        <li>Fare shown up front</li>
+        <li>Works on your phone</li>
+      </ul>
+    </div>
+    <div class="art">
+      <img src="assets/images/hero-ride.webp" width="1400" height="814" alt="Two people greeting beside a blue car, with a phone showing a route on a map" fetchpriority="high">
     </div>
   </div>
-  <div class="custom-shape-divider-bottom-1697272961">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-      <path id="wave" d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
-    </svg>
-  </div>
-</div>
+</section>

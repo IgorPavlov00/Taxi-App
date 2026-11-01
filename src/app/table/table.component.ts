@@ -1,6 +1,6 @@
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { DriveService } from '../drive.service';
+import { Ride } from '../ride';
 
 @Component({
   selector: 'app-table',
@@ -8,49 +8,64 @@ import { DriveService } from '../drive.service';
   styleUrls: ['./table.component.css']
 })
 export class TableComponent implements OnInit {
-  @ViewChild('rideDetailsModal') rideDetailsModal: TemplateRef<any> | undefined;
-  pagedRides: any[] = [];
+  @ViewChild('detailsDialog') detailsDialog?: ElementRef<HTMLDialogElement>;
+
+  readonly pageSize = 8;
+
+  pagedRides: Ride[] = [];
   currentPage = 1;
-  pageSize = 5;
   totalItems = 0;
   totalPages = 0;
-  selectedRide: any = null;
+  pages: number[] = [];
+  totalKm = 0;
+  totalSpent = 0;
+  selectedRide: Ride | null = null;
+  confirmingClear = false;
 
-  constructor(private driveService: DriveService, private modalService: NgbModal) {}
+  constructor(private driveService: DriveService) {}
 
   ngOnInit(): void {
-    this.totalItems = this.driveService.getTotalDrivesCount();
-    this.totalPages = Math.ceil(this.totalItems / this.pageSize);
-    this.fetchData();
-  }
-
-  fetchData(): void {
-    this.pagedRides = this.driveService.getPagedDrives(this.currentPage, this.pageSize);
+    this.load();
   }
 
   onPageChange(page: number): void {
-    this.currentPage = page;
-    this.fetchData();
+    this.currentPage = Math.min(Math.max(page, 1), this.totalPages || 1);
+    this.pagedRides = this.driveService.getPagedDrives(this.currentPage, this.pageSize);
   }
 
-  getPages(): number[] {
-    const pages: number[] = [];
-    for (let i = 1; i <= this.totalPages; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }
-
-  openDetailsModal(ride: any): void {
+  openDetails(ride: Ride): void {
     this.selectedRide = ride;
-    this.modalService.open(this.rideDetailsModal, { size: 'lg' });
+    this.detailsDialog?.nativeElement.showModal();
   }
 
-  truncateAddress(address: string): string {
-    const parts = address.split(',');
-    return parts.slice(0, 2).join(',');
+  closeDetails(): void {
+    this.detailsDialog?.nativeElement.close();
   }
-  backtoHome() {
-    window.location.href = '/';
+
+  onDialogClick(event: MouseEvent): void {
+    // Clicks on the content land on its children, so a hit on the dialog itself is the backdrop.
+    if (event.target === this.detailsDialog?.nativeElement) {
+      this.closeDetails();
+    }
+  }
+
+  clearHistory(): void {
+    this.driveService.clear();
+    this.confirmingClear = false;
+    this.load();
+  }
+
+  shortAddress(address: string): string {
+    return address.split(',').slice(0, 2).join(',');
+  }
+
+  private load(): void {
+    const rides = this.driveService.getDrives();
+    this.totalItems = rides.length;
+    this.totalPages = Math.ceil(rides.length / this.pageSize);
+    this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+    this.totalKm = rides.reduce((sum, ride) => sum + (ride.distanceKm ?? 0), 0);
+    this.totalSpent = rides.reduce((sum, ride) => sum + (ride.price ?? 0), 0);
+    this.onPageChange(1);
   }
 }

@@ -1,81 +1,80 @@
-<button type="button" class="btn btn-primary" style="margin-top: 30px;margin-left: 40px" (click)="backtoHome()">Back home</button>
+<div class="container page">
+  <header class="head">
+    <div>
+      <h1>Ride history</h1>
+      <p class="muted">Saved in this browser only.</p>
+    </div>
+    <a class="btn btn-primary" routerLink="/map">Book a ride</a>
+  </header>
 
-<div class="container mt-5">
-  <h2>Rides history</h2>
-  <table class="table table-striped">
-    <thead>
-    <tr>
-      <th>Start Address</th>
-      <th>Destination Address</th>
-      <th>Date & Time</th>
-      <th>Passenger Phone</th>
-      <th>Payment Method</th>
-      <th>Card Number</th>
-      <th>Card Expiry</th>
-      <th>Price</th>
-      <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr *ngFor="let ride of pagedRides">
-      <td>{{ truncateAddress(ride.startAddress) }}</td>
-      <td>{{ truncateAddress(ride.destinationAddress) }}</td>
-      <td>{{ ride.dateTime }}</td>
-      <td>{{ ride.passengerPhone }}</td>
-      <td>{{ ride.paymentMethod }}</td>
-      <td>{{ ride.cardNumber }}</td>
-      <td>{{ ride.cardExpiry }}</td>
-      <td>{{ ride.price }}</td>
-      <td>
-        <button class="btn btn-success" (click)="openDetailsModal(ride)">Details</button>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+  <div class="empty" *ngIf="totalItems === 0; else history">
+    <h2>No rides yet</h2>
+    <p class="muted">Rides appear here as soon as you finish one.</p>
+    <a class="btn btn-primary btn-lg" routerLink="/map">Book your first ride</a>
+  </div>
 
-  <!-- Pagination -->
-  <nav>
-    <ul class="pagination">
-      <li class="page-item" [class.disabled]="currentPage === 1">
-        <a class="page-link" (click)="onPageChange(1)" aria-label="First">
-          <span aria-hidden="true">&laquo;</span>
-        </a>
-      </li>
-      <li class="page-item" [class.disabled]="currentPage === 1">
-        <a class="page-link" (click)="onPageChange(currentPage - 1)" aria-label="Previous">
-          <span aria-hidden="true">&lsaquo;</span>
-        </a>
-      </li>
-      <li class="page-item" *ngFor="let page of getPages()" [class.active]="currentPage === page">
-        <a class="page-link" (click)="onPageChange(page)">{{ page }}</a>
-      </li>
-      <li class="page-item" [class.disabled]="currentPage === totalPages">
-        <a class="page-link" (click)="onPageChange(currentPage + 1)" aria-label="Next">
-          <span aria-hidden="true">&rsaquo;</span>
-        </a>
-      </li>
-      <li class="page-item" [class.disabled]="currentPage === totalPages">
-        <a class="page-link" (click)="onPageChange(totalPages)" aria-label="Last">
-          <span aria-hidden="true">&raquo;</span>
-        </a>
-      </li>
-    </ul>
-  </nav>
+  <ng-template #history>
+    <dl class="stats">
+      <div><dt>Rides</dt><dd>{{ totalItems }}</dd></div>
+      <div><dt>Distance</dt><dd>{{ totalKm | number:'1.0-1' }} km</dd></div>
+      <div><dt>Total fares</dt><dd>{{ totalSpent | number:'1.0-0' }} RSD</dd></div>
+    </dl>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Route</th>
+            <th scope="col">Departure</th>
+            <th scope="col">Payment</th>
+            <th scope="col" class="num">Fare</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ride of pagedRides">
+            <td class="route">
+              <span class="from">{{ shortAddress(ride.startAddress) }}</span>
+              <span class="to">{{ shortAddress(ride.destinationAddress) }}</span>
+            </td>
+            <td class="date">{{ ride.dateTime | date:'d MMM y, HH:mm' }}</td>
+            <td class="pay"><span class="tag">{{ ride.paymentMethod }}</span></td>
+            <td class="num fare">{{ ride.price | number:'1.0-0' }} RSD</td>
+            <td class="act"><button type="button" class="btn btn-secondary btn-small" (click)="openDetails(ride)">Details</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="foot">
+      <nav class="pager" aria-label="Ride history pages" *ngIf="totalPages > 1">
+        <button type="button" aria-label="Previous page" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">&lsaquo;</button>
+        <button type="button" *ngFor="let page of pages" [class.current]="page === currentPage" [attr.aria-current]="page === currentPage ? 'page' : null" (click)="onPageChange(page)">{{ page }}</button>
+        <button type="button" aria-label="Next page" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">&rsaquo;</button>
+      </nav>
+
+      <div class="clear">
+        <ng-container *ngIf="!confirmingClear; else confirmClear">
+          <button type="button" class="btn btn-ghost" (click)="confirmingClear = true">Clear history</button>
+        </ng-container>
+        <ng-template #confirmClear>
+          <span class="confirm-text">Delete all {{ totalItems }} rides?</span>
+          <button type="button" class="btn btn-danger" (click)="clearHistory()">Delete</button>
+          <button type="button" class="btn btn-ghost" (click)="confirmingClear = false">Keep</button>
+        </ng-template>
+      </div>
+    </footer>
+  </ng-template>
 </div>
 
-
-<ng-template #rideDetailsModal let-modal>
-  <div class="modal-header">
-    <h4 class="modal-title">Ride Details</h4>
-    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
-      <span aria-hidden="true">&times;</span>
-    </button>
-  </div>
-  <div class="modal-body">
+<!-- The click only adds closing via the backdrop; the browser already closes dialogs on Esc. -->
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+<dialog #detailsDialog aria-labelledby="ride-details-title" (click)="onDialogClick($event)">
+  <div class="dialog-body">
+    <header class="dialog-head">
+      <h2 id="ride-details-title">Ride details</h2>
+      <button type="button" class="dialog-close" aria-label="Close" (click)="closeDetails()">&times;</button>
+    </header>
     <app-ride-details [ride]="selectedRide"></app-ride-details>
   </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.close()">Close</button>
-
-  </div>
-</ng-template>
+</dialog>

@@ -1,285 +1,406 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
+import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import * as L from 'leaflet';
-import 'leaflet-routing-machine';
-import DriftMarker from 'leaflet-drift-marker';
-import { HttpClient } from '@angular/common/http';
+import { Observable, Subscription, forkJoin, map, of, switchMap } from 'rxjs';
+import { AddressInputComponent } from '../address-input/address-input.component';
 import { DriveService } from '../drive.service';
-import { ToastrService } from "ngx-toastr";
+import { GeoService, HOME } from '../geo.service';
+import {
+  FARE_PER_KM_RSD, PaymentMethod, Place, Ride, RoutePlan,
+  cumulativeDistances, fareFor, formatDuration, positionAlong, simulationMillis,
+} from '../ride';
+
+type Stage = 'plan' | 'quote' | 'driving' | 'done';
+type PinKind = 'pickup' | 'destination';
+
+const MIN_ROUTE_KM = 0.05;
+const UI_UPDATE_INTERVAL_MS = 200;
+const REDUCED_MOTION_DRIVE_MS = 4000;
+const STALE_DEPARTURE_MS = 5 * 60 * 1000;
+
+const PINS: Record<PinKind | 'car', L.DivIconOptions> = {
+  pickup: {
+    className: 'pin pin-pickup',
+    html: '<span></span>',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  },
+  destination: {
+    className: 'pin pin-destination',
+    html: '<svg width="32" height="40" viewBox="0 0 32 40"><path d="M16 1C7.700 1 1 7.700 1 16c0 10.500 15 23 15 23s15-12.500 15-23C31 7.700 24.300 1 16 1Z" fill="#ffc72c" stroke="#0e1526" stroke-width="2"/><circle cx="16" cy="16" r="5" fill="#0e1526"/></svg>',
+    iconSize: [32, 40],
+    iconAnchor: [16, 39],
+  },
+  car: {
+    className: 'pin pin-car',
+    html: '<svg width="26" height="44" viewBox="0 0 26 44"><rect x="1" y="1" width="24" height="42" rx="8" fill="#ffc72c" stroke="#0e1526" stroke-width="2"/><path d="M5 15c5-3 11-3 16 0l-2 6H7Z" fill="#0e1526"/><path d="M7 33h12l2 4c-5 2-11 2-16 0Z" fill="#0e1526"/><rect x="8" y="24" width="10" height="4" rx="1" fill="#0e1526"/></svg>',
+    iconSize: [26, 44],
+    iconAnchor: [13, 22],
+  },
+};
 
 @Component({
   selector: 'app-map',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterModule, AddressInputComponent],
   templateUrl: './map.component.html',
-  styleUrls: ['./map.component.css']
+  styleUrls: ['./map.component.css'],
 })
-export class MapComponent implements OnInit {
-  @Output() rideBooked = new EventEmitter<void>();
+export class MapComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('mapEl', { static: true }) mapEl!: ElementRef<HTMLElement>;
 
-  ride = {
-    startAddress: '',
-    destinationAddress: '',
-    dateTime: '',
-    passengerPhone: '',
-    paymentMethod: '',
-    cardNumber: '',
-    cardExpiry: ''
-  };
+  readonly farePerKm = FARE_PER_KM_RSD;
+  readonly formatDuration = formatDuration;
 
-  showPrice = false;
-  ridePrice: number | undefined;
+  stage: Stage = 'plan';
+  locating = false;
+  error = '';
 
-  private map!: L.Map;
-  private fromMarker!: L.Marker;
-  private toMarker!: L.Marker;
-  private routingControl!: L.Routing.Control;
-  private driftMarker: DriftMarker | null = null;
+  pickup: Place | null = null;
+  destination: Place | null = null;
+  pickupText = '';
+  destinationText = '';
+
+  route: RoutePlan | null = null;
+  fare = 0;
+
+  departure = this.localNow();
+  phone = '';
+  payment: PaymentMethod = 'Cash';
+
+  progress = 0;
+  completedRide: Ride | null = null;
+
+  private map?: L.Map;
+  private pins: Partial<Record<PinKind, L.Marker>> = {};
+  private routeLayer?: L.LayerGroup;
+  private travelled?: L.Polyline;
+  private car?: L.Marker;
+  private frame = 0;
+  private lookup?: Subscription;
+  private resizeObserver?: ResizeObserver;
+  private destroyed = false;
 
   constructor(
-    private http: HttpClient,
-    private driveService: DriveService,
-    private toastr: ToastrService,
+    private geo: GeoService,
+    private drives: DriveService,
+    private zone: NgZone,
   ) {}
 
-  ngOnInit(): void {
-    this.initMap();
+  get departureIsStale(): boolean {
+    return Date.parse(this.departure) < Date.now() - STALE_DEPARTURE_MS;
   }
 
-  initMap(): void {
-    this.map = L.map('map', {
-      center: [44.0165, 21.0059],
-      zoom: 12
-    });
-
-    const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      minZoom: 10,
-      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    });
-
-    tiles.addTo(this.map);
+  get remainingKm(): number {
+    return (this.route?.distanceKm ?? 0) * (1 - this.progress);
   }
 
-  bookRide(): void {
-    this.updateMapFrom()
-      .then(() => this.updateMapTo())
-      .then(() => this.addRoutingControl())
-      .then(() => {
-        this.simulateDrive();
-        this.calculateRidePrice();
-        this.showPrice = true;
-        this.rideBooked.emit(); // Emit event to notify parent component that ride is booked
-        this.convertCoordinatesToAddresses();
-        this.finishRide();
-      })
-      .catch(error => {
-        console.error('Error booking ride:', error);
-      });
+  get remainingMin(): number {
+    return (this.route?.durationMin ?? 0) * (1 - this.progress);
   }
 
-  updateMapFrom(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (this.fromMarker) {
-        this.map.removeLayer(this.fromMarker);
-      }
+  ngAfterViewInit(): void {
+    // Keep Leaflet's constant mouse and animation events from triggering change detection.
+    this.zone.runOutsideAngular(() => {
+      this.map = L.map(this.mapEl.nativeElement, { center: HOME, zoom: 13 });
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(this.map);
+      this.map.on('click', (event: L.LeafletMouseEvent) => this.zone.run(() => this.onMapClick(event.latlng)));
 
-      const url = `https://nominatim.openstreetmap.org/search?q=${this.ride.startAddress}&format=json`;
-      this.http.get(url).subscribe((data: any) => {
-        const coordinates = data[0];
-        this.setFrom(coordinates);
-        this.map.setView(new L.LatLng(coordinates.lat, coordinates.lon), 18);
-        this.fromMarker = L.marker([coordinates.lat, coordinates.lon], { draggable: false }).addTo(this.map);
-        resolve();
-        this.fromMarker.dragging?.disable()
-      }, error => {
-        reject(error);
-      });
+      this.resizeObserver = new ResizeObserver(() => this.map?.invalidateSize());
+      this.resizeObserver.observe(this.mapEl.nativeElement);
     });
   }
 
-  updateMapTo(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (this.toMarker) {
-        this.map.removeLayer(this.toMarker);
-      }
-
-      const url = `https://nominatim.openstreetmap.org/search?q=${this.ride.destinationAddress}&format=json`;
-      this.http.get(url).subscribe((data: any) => {
-        const coordinates = data[0];
-        this.setTo(coordinates);
-        this.map.setView(new L.LatLng(coordinates.lat, coordinates.lon), 18);
-        this.toMarker = L.marker([coordinates.lat, coordinates.lon], { draggable: false }).addTo(this.map);
-        resolve();
-      }, error => {
-        reject(error);
-      });
-    });
+  ngOnDestroy(): void {
+    this.destroyed = true;
+    cancelAnimationFrame(this.frame);
+    this.lookup?.unsubscribe();
+    this.resizeObserver?.disconnect();
+    this.map?.remove();
   }
 
-  addRoutingControl(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (this.routingControl) {
-        this.map.removeControl(this.routingControl);
-      }
+  onTextChange(kind: PinKind, text: string): void {
+    this.error = '';
+    if (kind === 'pickup') {
+      this.pickupText = text;
+      this.pickup = null;
+    } else {
+      this.destinationText = text;
+      this.destination = null;
+    }
+    this.setPin(kind, null);
+  }
 
-      const waypoints = [
-        this.fromMarker.getLatLng(),
-        this.toMarker.getLatLng()
-      ];
+  onPlaceSelected(kind: PinKind, place: Place): void {
+    this.error = '';
+    this.assign(kind, place);
+    this.setPin(kind, place);
+    this.frameMap();
+  }
 
-      const plan = L.Routing.plan(waypoints, {
-        createMarker: (i: any, wp: any, nWps: any) => {
-          return new DriftMarker(wp.latLng, {
-            duration: 3000,
-            keepAtCenter: true,
-            icon: L.icon({
-              iconUrl: 'assets/car.png',
-              iconSize: [32, 32],
-              iconAnchor: [16, 16]
-            }),
-            draggable: false // Ensure the drift marker is not draggable
-          }).addTo(this.map);
+  swap(): void {
+    [this.pickup, this.destination] = [this.destination, this.pickup];
+    [this.pickupText, this.destinationText] = [this.destinationText, this.pickupText];
+    this.setPin('pickup', this.pickup);
+    this.setPin('destination', this.destination);
+  }
+
+  findRoute(): void {
+    if (this.locating) {
+      return;
+    }
+    this.error = '';
+    if (!this.pickupText.trim() || !this.destinationText.trim()) {
+      this.error = 'Enter both a pickup and a destination.';
+      return;
+    }
+
+    this.locating = true;
+    this.lookup = forkJoin([
+      this.resolve(this.pickup, this.pickupText),
+      this.resolve(this.destination, this.destinationText),
+    ]).pipe(
+      switchMap(([from, to]) => {
+        const missing = !from ? this.pickupText : !to ? this.destinationText : null;
+        if (!from || !to) {
+          throw new AddressNotFound(missing ?? '');
         }
-      });
+        this.onPlaceSelected('pickup', from);
+        this.onPlaceSelected('destination', to);
+        return this.geo.route(from, to);
+      }),
+    ).subscribe({
+      next: route => this.showQuote(route),
+      error: err => {
+        this.locating = false;
+        this.error = this.describeError(err);
+      },
+    });
+  }
 
-      this.routingControl = L.Routing.control({
-        waypoints: waypoints,
-        plan: plan,
-        routeWhileDragging: true,
-        showAlternatives: true,
-        lineOptions: {
-          extendToWaypoints: true,
-          missingRouteTolerance: 100,
-          styles: [
-            {
-              color: '#1E90FF',
-              opacity: 0.7,
-              weight: 5
-            }
-          ]
+  backToPlan(): void {
+    this.clearRoute();
+    this.route = null;
+    this.stage = 'plan';
+  }
+
+  startRide(): void {
+    const route = this.route;
+    const activeMap = this.map;
+    if (!route || !activeMap) {
+      return;
+    }
+    const totals = cumulativeDistances(route.path);
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const duration = reducedMotion ? REDUCED_MOTION_DRIVE_MS : simulationMillis(route.durationMin);
+
+    this.progress = 0;
+    this.stage = 'driving';
+
+    this.zone.runOutsideAngular(() => {
+      this.travelled = L.polyline([], { color: '#98a2b3', weight: 6, opacity: 1 }).addTo(activeMap);
+      this.car = L.marker(route.path[0], { icon: L.divIcon(PINS.car), interactive: false, keyboard: false, zIndexOffset: 1000 }).addTo(activeMap);
+      const carSvg = this.car.getElement()?.querySelector('svg');
+
+      const startedAt = performance.now();
+      let lastUiUpdate = startedAt;
+      const tick = (now: number) => {
+        if (this.destroyed || this.stage !== 'driving') {
+          return;
         }
-      });
+        const progress = Math.min((now - startedAt) / duration, 1);
+        const position = positionAlong(route.path, totals, progress);
+        this.car?.setLatLng(position.point);
+        if (carSvg) {
+          carSvg.style.transform = `rotate(${position.bearing}deg)`;
+        }
+        this.travelled?.setLatLngs([...route.path.slice(0, position.segment + 1), position.point]);
 
-      this.routingControl.on('routesfound', () => {
-        resolve();
-      });
-
-      this.routingControl.addTo(this.map);
+        if (progress >= 1) {
+          this.zone.run(() => this.finishRide());
+          return;
+        }
+        if (now - lastUiUpdate >= UI_UPDATE_INTERVAL_MS) {
+          lastUiUpdate = now;
+          this.zone.run(() => this.progress = progress);
+        }
+        this.frame = requestAnimationFrame(tick);
+      };
+      this.frame = requestAnimationFrame(tick);
     });
   }
 
-  simulateDrive(): void {
-
-
-    const self = this;
-    const waypoints = this.routingControl.getWaypoints();
-
-
-    const marker = L.marker(this.fromMarker.getLatLng(), {icon: L.icon({iconUrl: 'https://cdn-icons-png.flaticon.com/128/7991/7991029.png', iconSize: [32, 32], iconAnchor: [16, 16]})}).addTo(this.map);
-
-    const fromMarker = this.fromMarker;
-    const toMarker = this.toMarker;
-
-
-    L.Routing.control({
-      waypoints: [
-        L.latLng(fromMarker.getLatLng()),
-        L.latLng(toMarker.getLatLng())
-      ],
-      lineOptions: {
-        extendToWaypoints: true,
-        missingRouteTolerance: 100,
-        styles: [
-          {
-            color: '#1E90FF',
-            opacity: 0.7,
-            weight: 5
-          }
-        ]
-      }
-    }).on('routesfound', function (e: { routes: { coordinates: any[]; }[]; }) {
-      const routes = e.routes;
-      console.log(routes);
-
-      e.routes[0].coordinates.forEach(function (coord, index) {
-        setTimeout(function () {
-          marker.setLatLng([coord.lat, coord.lng]);
-
-          if (index == e.routes[0].coordinates.length - 1) {
-            // Animation is complete, remove markers
-
-          }
-        }, 300 * index)
-      })
-
-    }).addTo(this.map);
-  }
-
-
-
-  setFrom(data: any): void {
-    this.ride.startAddress = `${data.lat}, ${data.lon}`;
-  }
-
-  setTo(data: any): void {
-    this.ride.destinationAddress = `${data.lat}, ${data.lon}`;
-  }
-
-  convertCoordinatesToAddresses(): void {
-    const fromUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${this.fromMarker.getLatLng().lat}&lon=${this.fromMarker.getLatLng().lng}&zoom=18&addressdetails=1`;
-    const toUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${this.toMarker.getLatLng().lat}&lon=${this.toMarker.getLatLng().lng}&zoom=18&addressdetails=1`;
-
-    this.http.get(fromUrl).subscribe((fromData: any) => {
-      this.ride.startAddress = fromData.display_name;
-
-      this.http.get(toUrl).subscribe((toData: any) => {
-        this.ride.destinationAddress = toData.display_name;
-
-        // After setting the addresses, save the ride
-        const rideDetails = {
-          ...this.ride,
-          dateTime: new Date(this.ride.dateTime).toISOString(), // Convert date to ISO format
-          price: this.ridePrice
-        };
-
-        this.driveService.saveDrive(rideDetails);
-      });
-    });
-  }
-
-  calculateRidePrice(): void {
-    const distance = this.calculateDistance();
-    // Simulate ride price calculation based on distance
-    this.ridePrice = Math.floor(distance * 400);
-  }
-
-  calculateDistance(): number {
-    // Get latitudes and longitudes
-    const lat1 = parseFloat(this.ride.startAddress.split(',')[0]);
-    const lon1 = parseFloat(this.ride.startAddress.split(',')[1]);
-    const lat2 = parseFloat(this.ride.destinationAddress.split(',')[0]);
-    const lon2 = parseFloat(this.ride.destinationAddress.split(',')[1]);
-
-    const R = 6371; // Radius of the Earth in km
-    const dLat = this.deg2rad(lat2 - lat1);
-    const dLon = this.deg2rad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c; // Distance in km
-    return distance;
-  }
-
-  deg2rad(deg: number): number {
-    return deg * (Math.PI / 180);
+  cancelRide(): void {
+    cancelAnimationFrame(this.frame);
+    this.removeDriveLayers();
+    this.progress = 0;
+    this.stage = 'quote';
   }
 
   finishRide(): void {
-    this.toastr.success('Ride completed. Price: ' + this.ridePrice+' RSD', 'Finished!');
+    const route = this.route;
+    if (!route || !this.pickup || !this.destination || this.stage !== 'driving') {
+      return;
+    }
+    cancelAnimationFrame(this.frame);
+    const end = route.path[route.path.length - 1];
+    this.car?.setLatLng(end);
+    this.travelled?.setLatLngs(route.path);
+    this.progress = 1;
+    this.completedRide = this.drives.saveDrive({
+      startAddress: this.pickup.label,
+      destinationAddress: this.destination.label,
+      dateTime: new Date(this.departure).toISOString(),
+      passengerPhone: this.phone.trim(),
+      paymentMethod: this.payment,
+      price: this.fare,
+      distanceKm: route.distanceKm,
+      durationMin: route.durationMin,
+    });
+    this.stage = 'done';
   }
-  backtoHome(): void {
-    window.location.href = '/';
 
+  bookAnother(): void {
+    this.clearRoute();
+    this.setPin('pickup', null);
+    this.setPin('destination', null);
+    this.pickup = this.destination = this.route = this.completedRide = null;
+    this.pickupText = this.destinationText = '';
+    this.departure = this.localNow();
+    this.progress = 0;
+    this.stage = 'plan';
+  }
+
+  private onMapClick(latlng: L.LatLng): void {
+    if (this.stage !== 'plan' || this.locating || (this.pickup && this.destination)) {
+      return;
+    }
+    const kind: PinKind = this.pickup ? 'destination' : 'pickup';
+    const pinned: Place = {
+      label: `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`,
+      lat: latlng.lat,
+      lng: latlng.lng,
+    };
+    this.onPlaceSelected(kind, pinned);
+
+    // The pin works with raw coordinates; swap in a street name if one arrives while it's still selected.
+    this.geo.reverse(latlng.lat, latlng.lng).subscribe({
+      next: place => {
+        if (place?.label && (kind === 'pickup' ? this.pickup : this.destination) === pinned) {
+          this.assign(kind, { ...pinned, label: place.label });
+        }
+      },
+      error: () => undefined,
+    });
+  }
+
+  private assign(kind: PinKind, place: Place): void {
+    if (kind === 'pickup') {
+      this.pickup = place;
+      this.pickupText = place.label;
+    } else {
+      this.destination = place;
+      this.destinationText = place.label;
+    }
+  }
+
+  private resolve(place: Place | null, text: string): Observable<Place | undefined> {
+    return place ? of(place) : this.geo.search(text.trim()).pipe(map(results => results[0]));
+  }
+
+  private showQuote(route: RoutePlan): void {
+    this.locating = false;
+    if (route.distanceKm < MIN_ROUTE_KM || route.path.length < 2) {
+      this.error = 'Pickup and destination are the same place. Choose a different destination.';
+      return;
+    }
+    this.route = route;
+    this.fare = fareFor(route.distanceKm);
+    this.departure = this.localNow();
+    this.stage = 'quote';
+    this.drawRoute(route);
+  }
+
+  private drawRoute(route: RoutePlan): void {
+    this.clearRoute();
+    this.zone.runOutsideAngular(() => {
+      if (!this.map) {
+        return;
+      }
+      this.routeLayer = L.layerGroup([
+        L.polyline(route.path, { color: '#ffffff', weight: 10, opacity: .9 }),
+        L.polyline(route.path, { color: '#0f62fe', weight: 6 }),
+      ]).addTo(this.map);
+      this.map.fitBounds(L.latLngBounds(route.path), { padding: [56, 56] });
+    });
+  }
+
+  private clearRoute(): void {
+    cancelAnimationFrame(this.frame);
+    this.removeDriveLayers();
+    this.routeLayer?.remove();
+    this.routeLayer = undefined;
+  }
+
+  private removeDriveLayers(): void {
+    this.car?.remove();
+    this.travelled?.remove();
+    this.car = undefined;
+    this.travelled = undefined;
+  }
+
+  private setPin(kind: PinKind, place: Place | null): void {
+    this.zone.runOutsideAngular(() => {
+      this.pins[kind]?.remove();
+      this.pins[kind] = undefined;
+      if (place && this.map) {
+        this.pins[kind] = L.marker([place.lat, place.lng], { icon: L.divIcon(PINS[kind]), keyboard: false }).addTo(this.map);
+      }
+    });
+  }
+
+  private frameMap(): void {
+    this.zone.runOutsideAngular(() => {
+      if (this.pickup && this.destination) {
+        this.map?.fitBounds(L.latLngBounds([
+          [this.pickup.lat, this.pickup.lng],
+          [this.destination.lat, this.destination.lng],
+        ]), { padding: [56, 56], maxZoom: 16 });
+      } else {
+        const place = this.pickup ?? this.destination;
+        if (place) {
+          this.map?.setView([place.lat, place.lng], Math.max(this.map.getZoom(), 15));
+        }
+      }
+    });
+  }
+
+  private describeError(err: unknown): string {
+    if (err instanceof AddressNotFound) {
+      return `We couldn't find "${err.address}". Try adding the city, or tap the spot on the map.`;
+    }
+    if (err instanceof HttpErrorResponse && err.error?.code === 'NoRoute'
+      || err instanceof Error && err.message.includes('NoRoute')) {
+      return 'There is no road route between these two places. Try somewhere closer.';
+    }
+    return 'The map service is not responding right now. Please try again in a moment.';
+  }
+
+  /** The current time in the format a datetime-local input expects. */
+  private localNow(): string {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   }
 }
 
+class AddressNotFound extends Error {
+  constructor(readonly address: string) {
+    super(`Address not found: ${address}`);
+  }
+}

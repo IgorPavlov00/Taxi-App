@@ -1,0 +1,46 @@
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+li { position: relative; counter-increment: step; }
+
+li::before {
+  content: counter(step);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  background: var(--yellow);
+  font-weight: 800;
+}
+
+/* The dashed road joining one step to the next. */
+li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 21px;
+  left: 56px;
+  right: -16px;
+  border-top: 2px dashed var(--line);
+}
+
+h3 { font-size: 1.15rem; letter-spacing: -.015em; }
+p { margin-top: 8px; color: var(--ink-soft); }
+
+.cta { margin-top: 44px; }
+
+@media (max-width: 860px) {
+  .steps { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  li { padding: 0 0 28px 62px; }
+  li::before { position: absolute; left: 0; top: 0; margin: 0; }
+  li:not(:last-child)::after { top: 52px; bottom: 8px; left: 21px; right: auto; border-top: 0; border-left: 2px dashed var(--line); }
+  .cta { margin-top: 12px; }
+}

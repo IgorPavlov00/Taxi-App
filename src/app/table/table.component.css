@@ -1,0 +1,172 @@
+.page { padding-block: clamp(28px, 5vw, 56px); }
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); }
+.muted { margin-top: 4px; color: var(--ink-soft); }
+
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: clamp(48px, 8vw, 88px) 24px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: center;
+}
+.empty h2 { font-size: 1.5rem; }
+.empty .btn { margin-top: 16px; }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+}
+.stats div {
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.stats dt { color: var(--ink-faint); font-size: .8rem; font-weight: 600; }
+.stats dd { margin: 2px 0 0; font-size: clamp(1.1rem, 3vw, 1.6rem); font-weight: 800; letter-spacing: -.02em; }
+
+.card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  padding: 12px 20px;
+  background: var(--canvas);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-faint);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+td { padding: 16px 20px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+.num { text-align: right; }
+.fare { font-weight: 700; white-space: nowrap; }
+.date { color: var(--ink-soft); white-space: nowrap; }
+.act { text-align: right; }
+
+.route span { display: block; position: relative; padding-left: 20px; font-weight: 600; line-height: 1.4; }
+.route .to { margin-top: 6px; }
+.route span::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border: 3px solid var(--blue);
+  border-radius: 50%;
+}
+.route .to::before { border-color: var(--ink); border-radius: 3px; background: var(--yellow); }
+
+.tag {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--blue-tint);
+  color: var(--blue-dark);
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.btn-small { min-height: 38px; padding: 6px 16px; font-size: .9rem; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.pager { display: flex; flex-wrap: wrap; gap: 4px; }
+.pager button {
+  min-width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-weight: 600;
+  cursor: pointer;
+}
+.pager button:hover:not(:disabled) { border-color: var(--ink-faint); }
+.pager button:disabled { opacity: .4; cursor: not-allowed; }
+.pager button.current { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+.clear { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; }
+.confirm-text { font-weight: 600; font-size: .925rem; }
+
+dialog {
+  width: min(560px, calc(100% - 32px));
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  color: inherit;
+}
+dialog::backdrop { background: rgba(14, 21, 38, .55); }
+.dialog-body { padding: 24px 28px 28px; }
+.dialog-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.dialog-head h2 { font-size: 1.35rem; }
+.dialog-close {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--canvas);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .stats { gap: 8px; }
+  .stats div { padding: 12px; }
+  .stats dt { font-size: .75rem; }
+  .stats dd { font-size: 1rem; white-space: nowrap; }
+  thead { display: none; }
+  table, tbody { display: block; }
+  tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px 12px;
+    padding: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  tbody tr:last-child { border-bottom: 0; }
+  td { display: block; padding: 0; border: 0; }
+  .route { grid-column: 1 / -1; }
+  .date { font-size: .875rem; white-space: normal; }
+  .fare { text-align: right; }
+  .pay { grid-row: 3; }
+  .act { grid-row: 3; }
+}

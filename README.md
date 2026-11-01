@@ -1,60 +1,57 @@
-# 🚕 Taxi Simulation App  
+# 🚕 Taxi App
 
 [![Angular](https://img.shields.io/badge/Angular-DD0031?style=flat&logo=angular&logoColor=white)](https://angular.io/)
 [![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=flat&logo=leaflet&logoColor=white)](https://leafletjs.com/)
-[![Netlify](https://img.shields.io/badge/Netlify-00C7B7?style=flat&logo=netlify&logoColor=white)](https://www.netlify.com/)
+[![Render](https://img.shields.io/badge/Render-46E3B7?style=flat&logo=render&logoColor=black)](https://render.com/)
 
-A realistic taxi driving simulator with ride history tracking, built using Angular and Leaflet map API.
+A taxi booking simulator built with Angular and Leaflet. Search real addresses, see the fare for the actual road route, then follow your taxi along it on the map. No real cars or payments are involved.
 
----
+## Features
 
-## 🌟 Features  
-- **🗺️ Interactive Map**: Leaflet-powered driving simulation with real-world coordinates  
-- **📊 Ride Analytics**: Detailed trip statistics including distance, duration, and earnings  
-- **⏱️ Real-time Tracking**: Live position updates during rides  
-- **📅 Ride History**: Comprehensive log of completed trips  
-- **🚦 Simulation Controls**: Accelerate, brake, and navigate using intuitive UI  
+- **Address search and map pins**: suggestions as you type, or tap the map to choose a spot
+- **Road routing**: distance, time and fare come from the real route, at 400 RSD per km
+- **Live ride simulation**: the taxi follows the route with progress and time remaining; trips play back in 12 to 45 seconds
+- **Ride history**: totals, ride details and pagination, stored in the browser's local storage
+- **Responsive and accessible**: works on phones, supports keyboard use and respects reduced-motion settings
 
----
+The app never asks for card details. Choosing Cash or Card only labels the ride, and card data saved by older versions is erased the next time the history loads.
 
-## 🚀 Live Demo  
-Experience the application live: [https://taxi-application.netlify.app/](https://taxi-application.netlify.app/)  
+## Getting started
 
----
+You need Node.js 18 (see `.nvmrc`).
 
-## 📸 Screenshots  
-| Main Interface | Ride History |  
-|----------------|--------------|  
-| ![Main Screen](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/030571e0-df3e-46a5-ab12-9d42ab9a2315) | ![History](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/05ab9ec6-3f29-4041-8aef-292eb116ef11) |  
+```bash
+git clone https://github.com/IgorPavlov00/Taxi-App.git
+cd Taxi-App
+npm ci
+npm start
+```
 
-| Simulation View | Trip Details |  
-|-----------------|--------------|  
-| ![Simulation](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/01853fb2-8324-4a08-9478-477e2d86b8bb) | ![Details](https://github.com/IgorPavlov00/Taxi-App/assets/103071674/e099e564-d25e-4567-8d97-8030207ad9da) |  
+Then open http://localhost:4200.
 
----
+| Command | What it does |
+| --- | --- |
+| `npm start` | Runs the development server |
+| `npm run build` | Creates a production build in `dist/untitled1` |
+| `npm test` | Runs the unit tests |
 
-## 🛠️ Tech Stack  
-**Frontend**  
-![Angular](https://img.shields.io/badge/Angular-DD0031?style=flat&logo=angular&logoColor=white)  
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)  
+## Deploying to Render
 
-**Mapping**  
-![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=flat&logo=leaflet&logoColor=white)  
+`render.yaml` defines a static site, including the rewrite that lets routes like `/map` load directly.
 
-**Deployment**  
-![Netlify](https://img.shields.io/badge/Netlify-00C7B7?style=flat&logo=netlify&logoColor=white)  
+1. In Render, choose **New > Blueprint** and connect this repository.
+2. Select the branch to deploy and apply the Blueprint.
 
----
+Render then builds and redeploys on every push to that branch.
 
-## 🏁 Getting Started  
+## Map services
 
-### Prerequisites  
-- Node.js 16+  
-- Angular CLI  
-- npm/yarn  
+The app calls these free public services directly from the browser, with no API keys:
 
-### Installation  
-1. Clone the repository:  
-   ```bash  
-   git clone https://github.com/IgorPavlov00/Taxi-App.git  
-   cd Taxi-App  
+| Purpose | Service |
+| --- | --- |
+| Map tiles | [OpenStreetMap](https://www.openstreetmap.org/copyright) |
+| Address search | [Photon](https://photon.komoot.io) |
+| Routing | [OSRM demo server](https://project-osrm.org) |
+
+They are fine for a demo, but they have usage limits and no uptime guarantee. An app with real traffic should move to a paid or self-hosted provider.

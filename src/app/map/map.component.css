@@ -1,27 +1,159 @@
-#map {
-  width: 100%;
-  height: 700px; /* Adjust the height as needed */
-  min-height: 500px; /* Ensure the map has a minimum height */
-  z-index: 1; /* Ensure the map is behind the form */
-  border-radius: 10px;
+.booking {
+  display: grid;
+  grid-template-columns: minmax(360px, 440px) minmax(0, 1fr);
+  height: calc(100vh - var(--nav-height) - 1px);
+  height: calc(100dvh - var(--nav-height) - 1px);
 }
 
-.map-overlay {
+.panel {
+  overflow-y: auto;
+  padding: clamp(20px, 3vw, 32px);
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+
+.map { min-height: 0; z-index: 0; }
+
+.stack { display: grid; gap: 20px; }
+.stack-tight { display: grid; gap: 10px; }
+
+h1 { font-size: clamp(1.7rem, 3vw, 2.1rem); }
+.muted { margin-top: 6px; color: var(--ink-soft); }
+
+.route-fields { position: relative; display: grid; gap: 14px; }
+
+.swap, .back {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.swap:hover, .back:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+.swap {
   position: absolute;
-  top: 10px; /* Adjust as needed */
-  left: 10px; /* Adjust as needed */
-  z-index: 2; /* Ensure the form is above the map */
-  background: rgba(255, 255, 255, 0.8); /* Optional: Add a semi-transparent background for readability */
-  padding: 10px; /* Adjust as needed */
+  z-index: 1;
+  top: -4px;
+  right: 0;
+  width: 34px;
+  height: 34px;
 }
 
-.map-container {
+.with-back { display: flex; align-items: center; gap: 12px; }
+.back { flex: none; width: 40px; height: 40px; }
+
+.trip {
   position: relative;
-  margin-right: 140px; /* Adjust the space on the right side */
-  width: calc(100% - 140px); /* Adjust to leave space on the right side */
-  height: 700px; /* Adjust the height as needed */
-  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: .925rem;
+  font-weight: 600;
+  line-height: 1.35;
 }
-.leaflet-control-container .leaflet-routing-container-hide {
-  display: none;
+.trip li { position: relative; padding-left: 24px; }
+.trip li::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  border: 3px solid var(--blue);
+  border-radius: 50%;
+}
+.trip li:last-child::before { border-color: var(--ink); border-radius: 3px; background: var(--yellow); }
+
+.quote {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: #fff;
+}
+.quote-label { display: block; color: #b9c1d0; font-size: .8rem; font-weight: 600; }
+.quote-fare { font-size: 2rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.15; color: var(--yellow); }
+.quote-fare small { font-size: 1rem; font-weight: 700; letter-spacing: 0; }
+.quote-stats { display: grid; gap: 4px; margin: 0; font-size: .875rem; text-align: right; }
+.quote-stats div { display: flex; justify-content: flex-end; gap: 8px; }
+.quote-stats dt { color: #b9c1d0; }
+.quote-stats dd { margin: 0; font-weight: 700; }
+.quote-note { grid-column: 1 / -1; color: #b9c1d0; font-size: .8rem; }
+
+.payment { margin: 0; padding: 0; border: 0; }
+.payment .field-label { padding: 0; }
+
+.segments {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--canvas);
+}
+.segments label { position: relative; cursor: pointer; }
+.segments input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.segments span {
+  display: block;
+  padding: 9px;
+  border-radius: 9px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  text-align: center;
+  transition: background-color .15s, color .15s;
+}
+.segments input:checked + span { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(14, 21, 38, .16); }
+.segments input:focus-visible + span { outline: 3px solid var(--blue); outline-offset: 1px; }
+
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--blue);
+  font-size: .85rem;
+  font-weight: 700;
+}
+.live span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--blue);
+  animation: pulse 1.4s ease-out infinite;
+}
+@keyframes pulse {
+  from { box-shadow: 0 0 0 0 rgba(15, 98, 254, .5); }
+  to { box-shadow: 0 0 0 10px rgba(15, 98, 254, 0); }
+}
+
+.meter { height: 10px; overflow: hidden; border-radius: 999px; background: var(--line); }
+.meter span { display: block; height: 100%; border-radius: inherit; background: var(--blue); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.actions .btn { flex: 1; }
+
+.success-mark {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  background: var(--green-tint);
+  color: var(--green);
+}
+
+@media (max-width: 860px) {
+  .booking { display: flex; flex-direction: column-reverse; height: auto; }
+  .map { height: 42vh; min-height: 260px; }
+  .panel { overflow: visible; border-right: 0; border-top: 1px solid var(--line); }
 }

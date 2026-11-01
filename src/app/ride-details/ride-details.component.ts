@@ -1,47 +1,29 @@
 import { Component, Input } from '@angular/core';
+import { Ride, formatDuration } from '../ride';
 
 @Component({
   selector: 'app-ride-details',
   template: `
-    <form>
-      <div class="form-group" *ngIf="ride?.startAddress">
-        <label for="startAddress">Start Address</label>
-        <input type="text" class="form-control" id="startAddress" [value]="ride?.startAddress" readonly>
-      </div>
-      <div class="form-group" *ngIf="ride?.destinationAddress">
-        <label for="destinationAddress">Destination Address</label>
-        <input type="text" class="form-control" id="destinationAddress" [value]="ride?.destinationAddress" readonly>
-      </div>
-      <div class="form-group" *ngIf="ride?.dateTime">
-        <label for="dateTime">Date & Time</label>
-        <input type="text" class="form-control" id="dateTime" [value]="ride?.dateTime" readonly>
-      </div>
-      <div class="form-group" *ngIf="ride?.passengerPhone">
-        <label for="passengerPhone">Passenger Phone</label>
-        <input type="text" class="form-control" id="passengerPhone" [value]="ride?.passengerPhone" readonly>
-      </div>
-      <div class="form-group" *ngIf="ride?.paymentMethod">
-        <label for="paymentMethod">Payment Method</label>
-        <input type="text" class="form-control" id="paymentMethod" [value]="ride?.paymentMethod" readonly>
-      </div>
-      <div class="form-group" *ngIf="ride?.cardNumber">
-        <label for="cardNumber">Card Number</label>
-        <input type="text" class="form-control" id="cardNumber" [value]="ride?.cardNumber" readonly>
-      </div>
-      <div class="form-group" *ngIf="ride?.cardExpiry">
-        <label for="cardExpiry">Card Expiry</label>
-        <input type="text" class="form-control" id="cardExpiry" [value]="ride?.cardExpiry" readonly>
-      </div>
-      <div class="form-group" *ngIf="ride?.price">
-        <label for="price">Price</label>
-        <input type="text" class="form-control" id="price" [value]="ride?.price + ' RSD'" readonly>
-      </div>
-
-    </form>
+    <dl *ngIf="ride">
+      <div class="wide"><dt>From</dt><dd>{{ ride.startAddress }}</dd></div>
+      <div class="wide"><dt>To</dt><dd>{{ ride.destinationAddress }}</dd></div>
+      <div><dt>Departure</dt><dd>{{ ride.dateTime | date:'d MMM y, HH:mm' }}</dd></div>
+      <div><dt>Phone</dt><dd>{{ ride.passengerPhone }}</dd></div>
+      <div><dt>Payment</dt><dd>{{ ride.paymentMethod }}</dd></div>
+      <div><dt>Fare</dt><dd>{{ ride.price | number:'1.0-0' }} RSD</dd></div>
+      <div *ngIf="ride.distanceKm"><dt>Distance</dt><dd>{{ ride.distanceKm | number:'1.1-1' }} km</dd></div>
+      <div *ngIf="ride.durationMin"><dt>Time</dt><dd>{{ formatDuration(ride.durationMin) }}</dd></div>
+    </dl>
   `,
+  styles: [`
+    dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0; }
+    .wide { grid-column: 1 / -1; }
+    dt { color: var(--ink-faint); font-size: .8rem; font-weight: 600; }
+    dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+  `],
 })
 export class RideDetailsComponent {
-  @Input() ride: any;
+  @Input() ride: Ride | null = null;
 
-
+  readonly formatDuration = formatDuration;
 }

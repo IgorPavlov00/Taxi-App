@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: taxi-app
+    runtime: static
+    buildCommand: npm ci --include=dev && npm run build
+    staticPublishPath: dist/untitled1
+    envVars:
+      # Angular 16 supports Node 16 and 18 only.
+      - key: NODE_VERSION
+        value: 18.20.8
+    routes:
+      # Angular handles routes such as /map itself, so deep links and refreshes must load the app.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

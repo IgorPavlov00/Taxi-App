@@ -1,0 +1,35 @@
+<label class="field-label" [attr.for]="inputId">{{ label }}</label>
+<div class="wrap">
+  <span class="dot" [class.dot-destination]="tone === 'destination'" aria-hidden="true"></span>
+  <input
+    class="input"
+    type="text"
+    autocomplete="off"
+    role="combobox"
+    aria-autocomplete="list"
+    [id]="inputId"
+    [placeholder]="placeholder"
+    [value]="text"
+    [attr.aria-expanded]="open"
+    [attr.aria-controls]="inputId + '-list'"
+    [attr.aria-activedescendant]="activeOptionId"
+    (input)="onInput($any($event.target).value)"
+    (keydown)="onKeydown($event)"
+    (focus)="focused = true"
+    (blur)="focused = false">
+  <span class="spinner" *ngIf="searching" aria-hidden="true"></span>
+
+  <ul class="list" role="listbox" [id]="inputId + '-list'" [hidden]="!open" [attr.aria-label]="label + ' suggestions'">
+    <!-- mousedown would blur the input and close the list before the click lands.
+         Keyboard users choose options from the input, which keeps focus, as the combobox pattern requires. -->
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+    <li
+      *ngFor="let place of results; let i = index"
+      role="option"
+      [id]="inputId + '-option-' + i"
+      [class.active]="i === activeIndex"
+      [attr.aria-selected]="i === activeIndex"
+      (mousedown)="$event.preventDefault()"
+      (click)="select(place)">{{ place.label }}</li>
+  </ul>
+</div>

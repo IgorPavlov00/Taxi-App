@@ -1,20 +1,22 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { MapComponent } from './map/map.component';
-import { HeroComponent } from './hero/hero.component';
-import {AppComponent} from "./app.component";
-import {MainComponent} from "./main/main.component";
-import {TableComponent} from "./table/table.component"; // Example component for default route
+import { MainComponent } from './main/main.component';
+import { TableComponent } from './table/table.component';
 
 const routes: Routes = [
-  { path: '', component: MainComponent }, // Set a default route
-  { path: 'map', component: MapComponent },
-  { path: 'table', component: TableComponent },
-  // Add other routes here as needed
+  { path: '', component: MainComponent, title: 'Taxi App – book a ride and watch it drive' },
+  {
+    path: 'map',
+    // Leaflet is only needed here, so it stays out of the landing page bundle.
+    loadComponent: () => import('./map/map.component').then(m => m.MapComponent),
+    title: 'Book a ride – Taxi App',
+  },
+  { path: 'table', component: TableComponent, title: 'Ride history – Taxi App' },
+  { path: '**', redirectTo: '' },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes, { scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' })],
   exports: [RouterModule]
 })
 export class AppRoutingModule { }

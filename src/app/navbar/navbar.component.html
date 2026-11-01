@@ -1,16 +1,24 @@
-<nav>
-  <div class="container">
-    <a href="#" id="brand">Taxi booking app</a>
-    <button>
-      <span></span>
-      <span></span>
-      <span></span>
+<header class="bar">
+  <nav class="container inner" aria-label="Main">
+    <a class="brand" routerLink="/" (click)="closeMenu()">
+      <img src="favicon.svg" alt="" width="32" height="32">
+      <span>Taxi App</span>
+    </a>
+
+    <button
+      type="button"
+      class="menu-toggle"
+      [attr.aria-expanded]="menuOpen"
+      aria-controls="primary-menu"
+      [attr.aria-label]="menuOpen ? 'Close menu' : 'Open menu'"
+      (click)="toggleMenu()">
+      <span></span><span></span><span></span>
     </button>
 
-    <ul class="navbar-menu">
-      <li><a href="#">Home</a></li>
-      <li><a href="/table">Rides history</a></li>
-      <li><a href="/map">Book a ride!</a></li>
-    </ul>
-  </div>
-</nav>
+    <div id="primary-menu" class="menu" [class.open]="menuOpen">
+      <a class="link" routerLink="/" routerLinkActive="current" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Home</a>
+      <a class="link" routerLink="/table" routerLinkActive="current" (click)="closeMenu()">Ride history</a>
+      <a class="btn btn-primary" routerLink="/map" (click)="closeMenu()">Book a ride</a>
+    </div>
+  </nav>
+</header>

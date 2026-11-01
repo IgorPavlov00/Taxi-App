@@ -1,0 +1,30 @@
+.about {
+  padding-block: clamp(56px, 8vw, 96px);
+  background: var(--ink);
+  color: #fff;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(32px, 6vw, 80px);
+  align-items: center;
+}
+
+.eyebrow { color: var(--yellow); }
+h2 { font-size: clamp(1.9rem, 4vw, 2.75rem); }
+h2 + p { margin-top: 16px; color: #b9c1d0; font-size: 1.075rem; }
+
+.points { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; }
+.points li {
+  padding: 22px 24px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .04);
+}
+h3 { font-size: 1.1rem; letter-spacing: -.015em; }
+.points p { margin-top: 6px; color: #b9c1d0; }
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+}

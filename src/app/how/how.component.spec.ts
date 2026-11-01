@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { HowComponent } from './how.component';
 
@@ -8,6 +9,7 @@ describe('HowComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
+      imports: [RouterTestingModule],
       declarations: [HowComponent]
     });
     fixture = TestBed.createComponent(HowComponent);

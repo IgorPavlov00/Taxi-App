@@ -1,1 +1,135 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --ink: #0e1526;
+  --ink-soft: #4a5468;
+  --ink-faint: #667085;
+  --surface: #ffffff;
+  --canvas: #f6f7fb;
+  --line: #e2e6ef;
+  --blue: #0f62fe;
+  --blue-dark: #0b4fd0;
+  --blue-tint: #e8f0ff;
+  --yellow: #ffc72c;
+  --yellow-dark: #f0b400;
+  --green: #0a7d4f;
+  --green-tint: #e4f6ee;
+  --red: #b42318;
+  --red-tint: #fdecea;
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 28px;
+  --shadow: 0 1px 2px rgba(14, 21, 38, .06), 0 8px 24px rgba(14, 21, 38, .06);
+  --shadow-lg: 0 12px 40px rgba(14, 21, 38, .16);
+  --nav-height: 68px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { line-height: 1.12; letter-spacing: -.025em; font-weight: 800; }
+a { color: inherit; }
+img, svg { display: block; max-width: 100%; }
+button, input, select { font: inherit; color: inherit; }
+
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+.container { width: min(1160px, 100% - 40px); margin-inline: auto; }
+
+.section { padding-block: clamp(56px, 8vw, 104px); }
+.section-head { max-width: 620px; margin-bottom: clamp(32px, 4vw, 52px); }
+.section-head h2 { font-size: clamp(1.9rem, 4vw, 2.75rem); }
+.section-head p { margin-top: 12px; color: var(--ink-soft); font-size: 1.075rem; }
+
+.eyebrow {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--blue);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 10px 20px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s, color .15s, transform .15s;
+}
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-primary { background: var(--yellow); color: var(--ink); }
+.btn-primary:hover:not(:disabled) { background: var(--yellow-dark); }
+.btn-secondary { background: var(--surface); border-color: var(--line); color: var(--ink); }
+.btn-secondary:hover:not(:disabled) { border-color: var(--ink-faint); }
+.btn-ghost { color: var(--ink-soft); }
+.btn-ghost:hover:not(:disabled) { color: var(--ink); background: rgba(14, 21, 38, .05); }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-block { width: 100%; }
+.btn-lg { min-height: 54px; padding-inline: 28px; font-size: 1.05rem; }
+
+.field { display: block; }
+.field-label { display: block; margin-bottom: 6px; font-size: .875rem; font-weight: 600; }
+.input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  transition: border-color .15s, box-shadow .15s;
+}
+.input::placeholder { color: var(--ink-faint); }
+.input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-tint); }
+.field-hint { margin-top: 6px; color: var(--ink-faint); font-size: .8rem; }
+.field-error { margin-top: 6px; color: var(--red); font-size: .8rem; font-weight: 600; }
+
+.alert {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--red-tint);
+  color: var(--red);
+  font-size: .9rem;
+  font-weight: 600;
+}
+
+/* Leaflet builds these nodes itself, so they cannot use component-scoped styles. */
+.pin { background: none; border: 0; }
+.pin-pickup span {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 5px solid var(--blue);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(14, 21, 38, .35);
+}
+.pin-destination svg { filter: drop-shadow(0 3px 4px rgba(14, 21, 38, .35)); }
+.pin-car svg { filter: drop-shadow(0 3px 5px rgba(14, 21, 38, .4)); }
+.leaflet-container { font-family: inherit; background: #e9edf2; }
+.leaflet-tile-pane { filter: saturate(.7) contrast(.97); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

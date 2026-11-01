@@ -5,9 +5,4 @@ import { Component } from '@angular/core';
   templateUrl: './hero.component.html',
   styleUrls: ['./hero.component.css']
 })
-export class HeroComponent {
-
-  goToMap() {
-    window.location.href = '/map';
-  }
-}
+export class HeroComponent {}
