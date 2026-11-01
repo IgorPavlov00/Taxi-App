@@ -6,6 +6,24 @@
 
 A taxi booking simulator built with Angular and Leaflet. Search real addresses, see the fare for the actual road route, then follow your taxi along it on the map. No real cars or payments are involved.
 
+**Live demo: https://taxi-app-fhpm.onrender.com**
+
+## Screenshots
+
+The ride history below uses sample rides.
+
+| Landing page | Ride history |
+| --- | --- |
+| ![Landing page with the headline "Book a ride. Watch it drive." and a blue car](docs/screenshots/home.jpg) | ![Ride history with totals and a list of rides](docs/screenshots/history.jpg) |
+
+| Route and fare | Ride in progress |
+| --- | --- |
+| ![Fare panel beside a road route drawn on a map of Kragujevac](docs/screenshots/fare.jpg) | ![Taxi driving along the route with progress and time remaining](docs/screenshots/ride.jpg) |
+
+**On a phone**
+
+![The landing, booking and ride history pages at phone width](docs/screenshots/mobile.jpg)
+
 ## Features
 
 - **Address search and map pins**: suggestions as you type, or tap the map to choose a spot
@@ -42,7 +60,7 @@ Then open http://localhost:4200.
 1. In Render, choose **New > Blueprint** and connect this repository.
 2. Select the branch to deploy and apply the Blueprint.
 
-Render then builds and redeploys on every push to that branch.
+If you connect the repository through your GitHub account, Render also redeploys on every push to that branch. If you use the public repository URL instead, trigger each deploy from the Render dashboard.
 
 ## Map services
 
